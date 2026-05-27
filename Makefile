@@ -1,2 +1,2 @@
 all:
-	gcc -o bot main.c -lcurl
+	gcc -o ./build/bot.out main.c -lcurl
