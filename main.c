@@ -4,7 +4,7 @@
 #include <curl/curl.h>
 
 #define TELEGRAM_URL "https://api.telegram.org/bot"
-#define TOKEN ""
+static char* TOKEN = NULL;
 
 size_t write_callback(void* contents, size_t size, size_t nmemb, char** response) {
     size_t total_size = size * nmemb;
@@ -46,6 +46,19 @@ CURLcode make_post_request(CURL* curl, char** response) {
 }
 
 int main(void) {
+    char* env_token = getenv("TELEGRAM_TOKEN");
+    
+    if (env_token == NULL) {
+        fprintf(stderr, "Error: TELEGRAM_TOKEN not set\n");
+        return 0;
+    }
+    
+    TOKEN = strdup(env_token);
+    if (TOKEN == NULL) {
+        fprintf(stderr, "Error: Memory allocation failed\n");
+        return 0;
+    }
+
     CURL* curl = curl_easy_init();
 
     char* response = malloc(1);
@@ -71,6 +84,10 @@ int main(void) {
             fprintf(stderr, "curl failed: %s\n", curl_easy_strerror(res));
         }
         
+        if (TOKEN != NULL) {
+            free(TOKEN);
+            TOKEN = NULL;
+        }
         free(response);
         curl_easy_cleanup(curl); 
 
