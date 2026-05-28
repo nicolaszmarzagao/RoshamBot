@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <curl/curl.h>
+#include <jansson.h>
 
 #define TELEGRAM_URL "https://api.telegram.org/bot"
 static char* TOKEN = NULL;
@@ -15,7 +16,6 @@ size_t write_callback(void* contents, size_t size, size_t nmemb, char** response
     return total_size;
 }
 
-
 char* get_request_url(const char* path) {
     char* request_url = malloc(257);
     if (!request_url) return NULL;
@@ -25,8 +25,8 @@ char* get_request_url(const char* path) {
     return request_url;
 }
 
-
 CURLcode make_get_request(CURL* curl, char** response) {
+    printf("[log] GET REQUEST\n");
     char* request_url = get_request_url("/getUpdates");
 
     curl_easy_setopt(curl, CURLOPT_URL, request_url);
@@ -36,11 +36,13 @@ CURLcode make_get_request(CURL* curl, char** response) {
     return curl_easy_perform(curl);
 }
 
-CURLcode make_post_request(CURL* curl, char** response) {
+CURLcode make_post_request(CURL* curl, char** response, const char* body) {
+    printf("[log] POST REQUEST\n");
     char* request_url = get_request_url("/sendMessage");
 
+    curl_easy_setopt(curl, CURLOPT_URL, request_url);
     curl_easy_setopt(curl, CURLOPT_POST, 1L);
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "chat_id=123&text=hello");
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body);
 
     return curl_easy_perform(curl);
 }
@@ -67,7 +69,6 @@ int main(void) {
 
     CURLcode res;
 
-
     if (curl) {
         res = make_get_request(curl, &response);
         if(res == CURLE_OK) {
@@ -76,8 +77,24 @@ int main(void) {
             fprintf(stderr, "curl failed: %s\n", curl_easy_strerror(res));
         }
 
+        if (strstr(response, "\"id\"")) {
+            printf("This string contains ID\n");
+        }
 
-        res = make_post_request(curl, &response);
+        json_error_t error;
+        json_t* root = json_loads(response, 0, &error);
+        json_t* r = json_object_get(root, "result");
+        json_t* head = json_array_get(r, 0);
+        json_t* m = json_object_get(head, "message");
+        json_t* chat = json_object_get(m, "chat");
+        json_t* id = json_object_get(chat, "id");
+        long long chat_id = json_integer_value(id);
+
+        response = NULL;
+
+        char body[256];
+        sprintf(body, "chat_id=%lld&text=Hello World!\n", chat_id);
+        res = make_post_request(curl, &response, body);
         if(res == CURLE_OK) {
             printf("Response:\n%s\n", response);
         } else {
