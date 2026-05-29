@@ -101,7 +101,6 @@ int main(void) {
 
         long long chat_id = get_chat_id(curl, &response);
 
-        // response = NULL;
         res = send_message(curl, &response, chat_id, "Hello from another funciton!");
         if(res == CURLE_OK) {
             printf("Response:\n%s\n", response);
