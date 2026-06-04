@@ -3,6 +3,7 @@
 #include <string.h>
 #include <curl/curl.h>
 #include <jansson.h>
+#include <unistd.h> 
 
 #include "roshambo.h"
 
@@ -79,7 +80,7 @@ long long get_chat_id(CURL* curl, char** response) {
 	const char* response_str = response[0];
 
 	if (strstr(response_str, "\"id\"")) {
-	printf("This string contains ID\n");
+		printf("This string contains ID\n");
 	}
 	json_error_t error;
 	json_t* root = json_loads(response_str, 0, &error);
@@ -92,19 +93,45 @@ long long get_chat_id(CURL* curl, char** response) {
 
 }
 
+enum Shapes get_player_choice(CURL* curl, char** response) {
+	CURLcode res;
+	
+	res = make_get_updates(curl, response);
+	if (res == CURLE_OK)
+	{
+		printf("Response:\n%s\n", response[0]);
+	}
+	else
+	{
+		printf("\ncurl failed: %s\n", curl_easy_strerror(res));
+	}
+	
+	const char* response_str = response[0];
+
+	json_error_t error;
+	json_t* root = json_loads(response_str, 0, &error);
+	json_t* r = json_object_get(root, "result");
+	json_t* head = json_array_get(r, 0);
+	json_t* m = json_object_get(head, "message");
+	json_t* chat = json_object_get(m, "chat");
+	json_t* id = json_object_get(chat, "id");
+	return ROCK;
+}
+
 char* intro_message()
 {
-	char* intro = 
+	return
 		"\t Let's play roshambo! \t\n\n"
 		"Here are your options...\n\n"
 		"/rock\n"
 		"/paper\n"
 		"/scissors\n\n"
 		"Ready?\n\n";
-	return intro;
 }
 
+
 int main(void) {
+	// setup
 	setup_env_token();
 
 	CURL* curl = curl_easy_init();
@@ -112,26 +139,35 @@ int main(void) {
 	if (!response) return -1;
 	response[0] = '\0';
 	CURLcode res;
-	if (curl) {
+	if (curl == NULL) return -1;
 
-		long long chat_id = get_chat_id(curl, &response);
+	// intro
+	long long chat_id = get_chat_id(curl, &response);
 
-		res = send_message(curl, &response, chat_id, intro_message());
-		if(res == CURLE_OK) {
-			printf("Response:\n%s\n", response);
-		} 
-		else {
-			fprintf(stderr, "curl failed: %s\n", curl_easy_strerror(res));
-		}
-
-		if (TOKEN != NULL) {
-			free(TOKEN);
-			TOKEN = NULL;
-		}
-		free(response);
-		curl_easy_cleanup(curl); 
-
+	res = send_message(curl, &response, chat_id, intro_message());
+	if(res == CURLE_OK) {
+		printf("Response:\n%s\n", response);
+	} 
+	else {
+		fprintf(stderr, "curl failed: %s\n", curl_easy_strerror(res));
 	}
+
+	// gameloop
+		// get player chooice
+		//enum Shapes s = get_player_choice(curl, &response);
+
+		// check result
+		// return reaction message
+		// display score
+
+	// clean up
+	if (TOKEN != NULL) {
+		free(TOKEN);
+		TOKEN = NULL;
+	}
+
+	free(response);
+	curl_easy_cleanup(curl); 
 
 	return 0;
 }
