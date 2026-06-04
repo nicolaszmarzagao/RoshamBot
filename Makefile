@@ -1,5 +1,6 @@
 all:
-	gcc -o ./build/bot.out main.c -lcurl -ljansson
+	mkdir -p ./build
+	gcc -o ./build/bot.out ./src/main.c -lcurl -ljansson -Wall -Werror -Wextra -Wpedantic
 
 run:
 	./build/bot.out
