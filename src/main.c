@@ -92,6 +92,18 @@ long long get_chat_id(CURL* curl, char** response) {
 
 }
 
+char* intro_message()
+{
+	char* intro = 
+		"\t Let's play roshambo! \t\n\n"
+		"Here are your options...\n\n"
+		"/rock\n"
+		"/paper\n"
+		"/scissors\n\n"
+		"Ready?\n\n";
+	return intro;
+}
+
 int main(void) {
 	setup_env_token();
 
@@ -104,7 +116,7 @@ int main(void) {
 
 		long long chat_id = get_chat_id(curl, &response);
 
-		res = send_message(curl, &response, chat_id, "Let's play roshambo!\nReady? Here are your options...\n/rock\n/paper\n/scissors\n");
+		res = send_message(curl, &response, chat_id, intro_message());
 		if(res == CURLE_OK) {
 			printf("Response:\n%s\n", response);
 		} 
