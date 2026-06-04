@@ -4,6 +4,8 @@
 #include <curl/curl.h>
 #include <jansson.h>
 
+#include "roshambo.h"
+
 #define TELEGRAM_URL "https://api.telegram.org/bot"
 static char* TOKEN = NULL;
 
@@ -102,7 +104,7 @@ int main(void) {
 
 		long long chat_id = get_chat_id(curl, &response);
 
-		res = send_message(curl, &response, chat_id, "Hello from another funciton!");
+		res = send_message(curl, &response, chat_id, "Let's play roshambo!\nReady? Here are your options...\n/rock\n/paper\n/scissors\n");
 		if(res == CURLE_OK) {
 			printf("Response:\n%s\n", response);
 		} 

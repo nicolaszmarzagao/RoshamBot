@@ -1,29 +1,16 @@
-#include <stdio>
 #include <time.h>
 #include <stdlib.h>
+#include "roshambo.h"
 
-struct Score
+struct Score init_score() 
 {
-	unsigned int wins;
-	unsigned int draws;
-	unsigned int loses;
-};
+	struct Score s;
+	s.wins  = 0;
+	s.draws = 0;
+	s.loses = 0;
 
-enum Shapes 
-{
-	ROCK     = 1,
-	PAPER    = 2,
-	SCISSORS = 3,
-};
-
-enum Result
-{
-	WIN  = 1,
-	DRAW = 2,
-	LOSE = 3,
-};
-
-
+	return s;
+}
 
 enum Shapes get_bot_shape()
 {
